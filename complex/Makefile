@@ -15,6 +15,8 @@ echo_client_LDFLAGS         =
 echo_client_SOURCE          = Main.c \
                               Process.c \
                               Log.c \
+                              RingBuffer.c \
+                              Message.c \
                               EchoClient.c
 
 echo_server_CFLAGS          = -DWITH_ECHO_SERVER
@@ -22,6 +24,8 @@ echo_server_LDFLAGS         =
 echo_server_SOURCE          = Main.c \
                               Process.c \
                               Log.c \
+                              RingBuffer.c \
+                              Message.c \
                               EchoServer.c
 
 web_client_CFLAGS           = -DWITH_WEB_CLIENT

@@ -1,4 +1,5 @@
 #include "EchoClient.h"
+#include "Message.h"
 #include "Log.h"
 
 #include <stdlib.h>
@@ -13,9 +14,14 @@ bool
 EchoClient_connect(struct addrinfo *addrinfo)
 {
     int                 sockfd;
-    int                 num_bytes;
-    char                buffer[64];
-    int                 len;
+    const char         *text = "Das ist der Daumen, " \
+                               "der schüttelt die Pflaumen, " \
+                               "der liest sie auf, " \
+                               "der trägt sie heim, " \
+                               "und der kleine isst sie ganz allein.";
+
+    //char                buffer[64];
+    //int                 len;
 
     /* create socket */
     if((sockfd = socket(addrinfo->ai_family, addrinfo->ai_socktype, 0)) == -1) {
@@ -28,11 +34,18 @@ EchoClient_connect(struct addrinfo *addrinfo)
         CLIENT_FAILURE_EXIT
     }
 
-    /* send */
-    strncpy(buffer, "Ping!", sizeof(buffer));
-    len = strnlen(buffer, sizeof(buffer));
-    if ((num_bytes = send(sockfd, buffer, len, 0)) == -1) {
-        Log_errno(LOG_ERROR, errno, ("Can't send"));
+    /* send request to upper */
+    if (!Message_send(sockfd, REQUEST_TO_UPPER, 1, text, strlen(text))) {
+        CLIENT_FAILURE_EXIT
+    }
+
+    /* send request to lower */
+    if (!Message_send(sockfd, REQUEST_TO_LOWER, 2, text, strlen(text))) {
+        CLIENT_FAILURE_EXIT
+    }
+
+    /* send request finish */
+    if (!Message_send(sockfd, REQUEST_FINISH, 3, NULL, 0)) {
         CLIENT_FAILURE_EXIT
     }
 

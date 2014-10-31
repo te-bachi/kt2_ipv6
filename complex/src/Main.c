@@ -108,7 +108,10 @@ main(int argc, char *argv[])
 
     struct addrinfo     hints;
     struct addrinfo    *addrinfo = NULL;
-    char                ip_str[INET6_ADDRSTRLEN];
+    char                host_str[NI_MAXHOST];
+    char                ip_address_str[NI_MAXHOST];
+    char                service_str[NI_MAXSERV];
+    char                port_str[NI_MAXSERV];
     int                 status;
 
     g_argc = argc;
@@ -189,11 +192,9 @@ main(int argc, char *argv[])
         hostname = argv[optind];
     }
 
-#ifdef WITH_ECHO_CLIENT
     if ((argc - optind) >= 2) {
         service  = argv[optind + 1];
     }
-#endif
 
     Log_init(stderr, LOG_DEBUG_PRIVATE, LOG_FLAG_TIME | LOG_FLAG_PID | LOG_FLAG_FILENAME | LOG_FLAG_LINE);
 
@@ -201,6 +202,10 @@ main(int argc, char *argv[])
     if (hostname == NULL) {
         Log_println(LOG_ERROR,("Hostname resp. IP-address must be specified"));
         return false;
+    }
+#else
+    if (hostname == NULL) {
+        //hostname = "0.0.0.0";
     }
 #endif
 
@@ -217,29 +222,30 @@ main(int argc, char *argv[])
 
     status = getaddrinfo(hostname, service, &hints, &addrinfo);
     if (status) {
-        Log_println(LOG_ERROR, "Invalid address: %s", gai_strerror(status));
+        Log_gai(LOG_ERROR, status, "Invalid address");
         return false;
     }
 
-    status = getnameinfo(addrinfo->ai_addr, addrinfo->ai_addrlen, ip_str, sizeof(ip_str), 0, 0, NI_NUMERICHOST);
+    status = getnameinfo(addrinfo->ai_addr, addrinfo->ai_addrlen, host_str, sizeof(host_str), service_str, sizeof(service_str), 0);
     if (status) {
-        Log_println(LOG_ERROR, "Invalid address: %s", gai_strerror(status));
+        Log_gai(LOG_ERROR, status, "Invalid address");
         return false;
     }
 
-    if(addrinfo->ai_family == AF_INET) {
-        Log_println(LOG_DEBUG, "%s is an IPv4 address: %s", hostname, ip_str);
-    } else if (addrinfo->ai_family == AF_INET6) {
-        Log_println(LOG_DEBUG, "%s is an IPv6 address: %s", hostname, ip_str);
-    } else {
-        Log_println(LOG_ERROR, "%s is an unknown address format %d", hostname, addrinfo->ai_family);
+    status = getnameinfo(addrinfo->ai_addr, addrinfo->ai_addrlen, ip_address_str, sizeof(ip_address_str), port_str, sizeof(port_str), NI_NUMERICHOST | NI_NUMERICSERV);
+    if (status) {
+        Log_gai(LOG_ERROR, status, "Invalid address");
+        return false;
     }
 
 #ifdef WITH_ECHO_CLIENT
+    Log_println(LOG_DEBUG, "Connect to server %s (%s), service %s (%s)", host_str, ip_address_str, service_str, port_str);
     EchoClient_connect(addrinfo);
 #elif WITH_ECHO_SERVER
+    Log_println(LOG_DEBUG, "Listen on %s (%s), service %s (%s)", host_str, ip_address_str, service_str, port_str);
     EchoServer_create(addrinfo);
 #elif WITH_WEB_CLIENT
+    Log_println(LOG_DEBUG, "Connect from web server %s (%s), service %s (%s)", host_str, ip_address_str, service_str, port_str);
     WebClient_get(addrinfo);
 #endif
 

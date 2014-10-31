@@ -12,6 +12,9 @@
 #define CONFIG_SERVICE                      "2345"
 #define CONFIG_LISTEN_QUEUE                 6
 
+#define CONFIG_SELECT_WAIT_SECS             0
+#define CONFIG_SELECT_WAIT_USECS            5000
+
 #include <stdbool.h>
 #include <netdb.h>
 

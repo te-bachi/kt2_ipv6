@@ -38,11 +38,12 @@ const char REQUEST[]            = "GET / HTTP/1.0\nAccept: */*\nUser-Agent: clie
 /* Macro um eine beliebige Datenstruktur (mittels Nullen) zu löschen     */
 #define ClearMemory(s) memset((char*)&(s), 0, sizeof(s))
 
-void ExitOnError(int Status, char* Text, char *ErrorText);
+void ExitOnError(int Status, struct addrinfo *addrinfo, char* Text, char *ErrorText);
 
 /* Prozedur zur Fehlerabfrage und Behandlung                             */
-void ExitOnError(int Status, char* Text, char *ErrorText) {
+void ExitOnError(int Status, struct addrinfo *addrinfo, char* Text, char *ErrorText) {
     if (Status < 0) {
+        freeaddrinfo(addrinfo);
         fprintf(stderr, "%s%s\n", Text, ErrorText);
         exit(1);
     }
@@ -119,20 +120,20 @@ int main(int ArgumentCount, char* ArgumentValue[]) {
 
     /* Socket für Verbindungsaufbau und Datentransfer erzeugen            */
     CommunicationSocket = socket(addrinfo->ai_family, addrinfo->ai_socktype, 0);
-    ExitOnError(CommunicationSocket, "socket fehlgeschlagen: ", strerror(errno));
+    ExitOnError(CommunicationSocket, addrinfo, "socket fehlgeschlagen: ", strerror(errno));
 
     /* Verbindung zum Server und Dienst erstellen                         */
     fprintf(stdout,"Verbindung zu Adresse %s Port %d aufbauen\n",  inet_ntop(AF_INET6, addrinfo->ai_addr, AddressBuffer, INET6_ADDRSTRLEN),
                                                                    ntohs(((struct sockaddr_in6 *) addrinfo->ai_addr)->sin6_port));
     Status = connect(CommunicationSocket, addrinfo->ai_addr, addrinfo->ai_addrlen);
-    ExitOnError(Status, "connect fehlgeschlagen: ", strerror(errno));
+    ExitOnError(Status, addrinfo, "connect fehlgeschlagen: ", strerror(errno));
 
     /**********************************************************************/
     /* Request-Header senden - Bitte ergänzen!                            */
     Status = send(CommunicationSocket, REQUEST, strlen(REQUEST), 0);
     //Status=send( /* Ziel, Zeichenfolge, Anzahl Zeichen, 0 */ );
     /**********************************************************************/
-    ExitOnError(Status, "send fehlgeschlagen: ", strerror(errno));
+    ExitOnError(Status, addrinfo, "send fehlgeschlagen: ", strerror(errno));
 
     /* Wiederholt Daten vom Server lesen und am Bildschirm anzeigen       */
     CharsReceived = recv(CommunicationSocket, Buffer, sizeof(Buffer), 0);
@@ -144,7 +145,9 @@ int main(int ArgumentCount, char* ArgumentValue[]) {
 
     /* Close the socket                                                   */
     close(CommunicationSocket);
-    ExitOnError(Status, "close fehlgeschlagen: ", strerror(errno));
+    ExitOnError(Status, addrinfo, "close fehlgeschlagen: ", strerror(errno));
+
+    freeaddrinfo(addrinfo);
 
     /* Programm mit positivem Status beenden */
     exit(0);

@@ -66,6 +66,7 @@ void        Log_init                    (FILE *stream, LogLevel level, uint8_t f
 void        Log_print                   (LOG_PARAMETER_DECLARATION, const char *format, ...)                __attribute__ ((format (printf, LOG_FORMAT_STRING, LOG_FORMAT_PARAMETER)));
 void        Log_println                 (LOG_PARAMETER_DECLARATION, const char *format, ...)                __attribute__ ((format (printf, LOG_FORMAT_STRING, LOG_FORMAT_PARAMETER)));
 void        Log_errno                   (LOG_PARAMETER_DECLARATION, int errnum, const char *format, ...)    __attribute__ ((format (printf, LOG_FORMAT_STRING + 1, LOG_FORMAT_PARAMETER + 1)));
+void        Log_gai                     (LOG_PARAMETER_DECLARATION, int gai,    const char *format, ...)    __attribute__ ((format (printf, LOG_FORMAT_STRING + 1, LOG_FORMAT_PARAMETER + 1)));
 void        Log_append                  (LOG_PARAMETER_DECLARATION, const char *format, ...)                __attribute__ ((format (printf, LOG_FORMAT_STRING, LOG_FORMAT_PARAMETER)));
 void        Log_appendln                (LOG_PARAMETER_DECLARATION, const char *format, ...)                __attribute__ ((format (printf, LOG_FORMAT_STRING, LOG_FORMAT_PARAMETER)));
 void        Log_charstream              (LOG_PARAMETER_DECLARATION, const char *stream, const uint32_t len);

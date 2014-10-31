@@ -9,6 +9,7 @@
 #include <pthread.h>
 
 #include <arpa/inet.h>
+#include <netdb.h>
 
 static bool Log_header(LOG_PARAMETER_DECLARATION);
 
@@ -75,9 +76,9 @@ Log_header(LOG_PARAMETER_DECLARATION)
         }
     }
 
-    /* PID */
+    /* PID / TID */
     if (logger.flags & LOG_FLAG_PID) {
-        fprintf(logger.stream, "[%5d]", getpid());
+        fprintf(logger.stream, "[%d:%ld]", getpid(), (long int) pthread_self());
     }
 
 #ifdef ENABLE_LOG_DEBUG
@@ -207,6 +208,24 @@ Log_errno(LOG_PARAMETER_DECLARATION, int errnum, const char *format, ...)
 }
 
 void
+Log_gai(LOG_PARAMETER_DECLARATION, int gai, const char *format, ...)
+{
+    va_list             args;
+
+    pthread_mutex_lock(&logger.mutex);
+
+    Log_header(LOG_PARAMETER_IMPLEMENTATION);
+    va_start(args, format);
+    vfprintf(logger.stream, format, args);
+    fflush(logger.stream);
+    va_end(args);
+
+    fprintf(logger.stream, ": %s\n", gai_strerror(gai));
+
+    pthread_mutex_unlock(&logger.mutex);
+}
+
+void
 Log_charstream(LOG_PARAMETER_DECLARATION, const char *stream, const uint32_t len)
 {
     /*      ________________________
@@ -239,3 +258,5 @@ Log_getFamily(int family)
         default:        return "Unknow";
     }
 }
+
+
